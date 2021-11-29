@@ -7,7 +7,6 @@ exports.handler = async function (event, context) {
     try {
         const response = await fetch(url);
         const responseData = await response.json();
-        console.log(responseData)
         return { statusCode: 200, body: JSON.stringify({ data: responseData }) };
     } catch (error) {
         console.log(error);
