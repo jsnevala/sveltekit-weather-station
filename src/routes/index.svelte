@@ -3,30 +3,80 @@
 </script>
 
 <script lang="ts">
-	import Counter from '$lib/Counter.svelte';
+	import { onMount } from "svelte";
+
+	import Chart from './Chart.svelte'
+
+	import { variables } from '../variables.ts'
+
+
+	const options = {
+		chart: {
+			type: 'line',
+			width: '100%'
+		},
+		xaxis: {
+			type: 'datetime'
+		},
+		yaxis: {
+			type: 'numeric'
+		},
+		series: [{
+			name: 'temperature',
+			data: []
+		}]
+	}
+
+	let latestTemp : Number = 0;
+	let latestTime : Date = null;
+
+	let url = "http://" + variables.url + variables.basePath +"?apiKey=" + variables.apiKey;
+
+	onMount(async () => {
+		fetch(url)
+			.then(response => response.json())
+			.then(data => {
+				data.weatherData.sort((a, b) => {
+					return a.timestamp > b.timestamp ? -1 : a.timestamp === b.timestamp ? 0 : 1;
+				});
+
+				latestTemp = data.weatherData[0].temperature;
+				latestTime = new Date(data.weatherData[0].timestamp);
+
+				options.series[0].data = data.weatherData
+					.map(measurement => {
+						return [measurement.timestamp, measurement.temperature]
+					})
+			})
+			.catch(error => {
+				return [];
+			}
+		);
+	});
 </script>
 
 <svelte:head>
-	<title>Home</title>
+	<title>Kråköboard</title>
 </svelte:head>
 
 <section>
 	<h1>
 		<div class="welcome">
-			<picture>
-				<source srcset="svelte-welcome.webp" type="image/webp" />
-				<img src="svelte-welcome.png" alt="Welcome" />
-			</picture>
+			Lämpötila
 		</div>
-
-		to your new<br />SvelteKit app
 	</h1>
 
-	<h2>
-		try editing <strong>src/routes/index.svelte</strong>
-	</h2>
+	<div class="info">
+		{ latestTemp } °C
+	</div>
+	<div class="date">
+		{ latestTime }
+	</div>
 
-	<Counter />
+	<div class="chart">
+		<Chart options={options}/>
+	</div>
+
 </section>
 
 <style>
@@ -46,14 +96,22 @@
 		position: relative;
 		width: 100%;
 		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
+		padding: 0 0 calc(100% * 200 / 2048) 0;
 	}
 
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
+	.info {
+		font-size: xxx-large;
+		padding: 0 0 calc(100% * 200 / 2048) 0;
 	}
+
+	.date {
+		font-size: medium;
+		padding: 0 0 calc(100% * 100 / 2048) 0;
+	}
+
+	.chart {
+		width: 100%;
+        height: calc(100% * 500 / 2048);
+	}
+
 </style>
