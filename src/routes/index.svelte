@@ -21,10 +21,22 @@
 		series: [{
 			name: 'temperature',
 			data: []
-		}]
+		}],
+		noData: {
+			text: "Ladataan...",
+			align: 'center',
+			verticalAlign: 'middle',
+			offsetX: 0,
+			offsetY: 0,
+			style: {
+				color: "#000000",
+				fontSize: '16px',
+				fontFamily: "Helvetica"
+			}
+		}
 	}
 
-	let latestTemp : Number = 0;
+	let latestTemp : Number = null;
 	let latestTime : Date = null;
 
 	let location = '';
@@ -69,10 +81,14 @@
 	</h1>
 
 	<div class="info">
-		{ latestTemp } °C
+		{#if latestTemp != null }
+			{ latestTemp } °C
+		{:else}
+			Ladataan...
+		{/if}
 	</div>
 	<div class="date">
-		{ latestTime }
+		{ latestTime  ? latestTime.toLocaleString() : '' }
 	</div>
 
 	<div class="chart">
