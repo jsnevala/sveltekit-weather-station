@@ -7,9 +7,6 @@
 
 	import Chart from './Chart.svelte'
 
-	import { variables } from '../variables.ts'
-
-
 	const options = {
 		chart: {
 			type: 'line',
@@ -30,18 +27,23 @@
 	let latestTemp : Number = 0;
 	let latestTime : Date = null;
 
-	let url = "http://" + variables.url + variables.basePath +"?apiKey=" + variables.apiKey;
+	let location = '';
+
+	const url = '/.netlify/functions/WeatherData'
 
 	onMount(async () => {
 		fetch(url)
 			.then(response => response.json())
-			.then(data => {
+			.then(responseData => {
+				const data = responseData.data;
+
 				data.weatherData.sort((a, b) => {
 					return a.timestamp > b.timestamp ? -1 : a.timestamp === b.timestamp ? 0 : 1;
 				});
 
 				latestTemp = data.weatherData[0].temperature;
 				latestTime = new Date(data.weatherData[0].timestamp);
+				location = data.weatherData[0].location;
 
 				options.series[0].data = data.weatherData
 					.map(measurement => {
@@ -62,7 +64,7 @@
 <section>
 	<h1>
 		<div class="welcome">
-			Lämpötila
+			Lämpötila: { location }
 		</div>
 	</h1>
 
