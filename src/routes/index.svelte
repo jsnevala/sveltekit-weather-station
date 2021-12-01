@@ -12,6 +12,7 @@
 			type: 'line',
 			width: '100%'
 		},
+		colors: ['#00aeff', '#E91E63'],
 		xaxis: {
 			type: 'datetime'
 		},
@@ -19,9 +20,13 @@
 			type: 'numeric'
 		},
 		series: [{
-			name: 'temperature',
+			name: 'Ulkolämpötila',
 			data: []
-		}],
+		},
+		{
+            name: 'Sisälämpötila',
+            data: []
+        }],
 		noData: {
 			text: "Ladataan...",
 			align: 'center',
@@ -36,12 +41,19 @@
 		}
 	}
 
-	let latestTemp : Number = null;
-	let latestTime : Date = null;
-
-	let location = '';
+	let latestOutsideTemp : Number = null;
+	let latestOutsideTime : Date = null;
+	let latestInsideTemp : Number = null;
+	let latestInsideTime : Date = null;
 
 	const url = '/.netlify/functions/WeatherData'
+
+	function getLocationData(data, location) {
+		let locationData = data.weatherData.filter(d => d.location === location);
+		return locationData.sort((a, b) => {
+			return a.timestamp > b.timestamp ? -1 : a.timestamp === b.timestamp ? 0 : 1;
+		});
+	}
 
 	onMount(async () => {
 		fetch(url)
@@ -49,18 +61,23 @@
 			.then(responseData => {
 				const data = responseData.data;
 
-				data.weatherData.sort((a, b) => {
-					return a.timestamp > b.timestamp ? -1 : a.timestamp === b.timestamp ? 0 : 1;
-				});
+				const outsideData = getLocationData(data, 'outside');
+				const insideData = getLocationData(data, 'inside');
 
-				latestTemp = data.weatherData[0].temperature;
-				latestTime = new Date(data.weatherData[0].timestamp);
-				location = data.weatherData[0].location;
+				latestOutsideTemp = outsideData[0].temperature.toFixed(2);
+				latestOutsideTime = new Date(outsideData[0].timestamp);
 
-				options.series[0].data = data.weatherData
+				latestInsideTemp = insideData[0].temperature.toFixed(2);
+				latestInsideTime = new Date(insideData[0].timestamp);
+
+				options.series[0].data = outsideData
 					.map(measurement => {
 						return [measurement.timestamp, measurement.temperature]
 					})
+				options.series[1].data = insideData
+						.map(measurement => {
+							return [measurement.timestamp, measurement.temperature]
+						})
 			})
 			.catch(error => {
 				return [];
@@ -76,19 +93,29 @@
 <section>
 	<h1>
 		<div class="welcome">
-			Lämpötila: { location }
+			Lämpötila
 		</div>
 	</h1>
 
 	<div class="info">
-		{#if latestTemp != null }
-			{ latestTemp } °C
+		{#if latestOutsideTemp != null && latestInsideTemp != null }
+			<div>
+				{ latestOutsideTemp } °C (ulko)
+			</div>
+			<div>
+				{ latestInsideTemp } °C (sisä)
+			</div>
 		{:else}
 			Ladataan...
 		{/if}
 	</div>
 	<div class="date">
-		{ latestTime  ? latestTime.toLocaleString() : '' }
+		<div>
+			{ latestOutsideTime  ? latestOutsideTime.toLocaleString() : '' } (ulko)
+		</div>
+		<div>
+			{ latestInsideTime ? latestInsideTime.toLocaleString() : '' } (sisä)
+		</div>
 	</div>
 
 	<div class="chart">
