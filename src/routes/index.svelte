@@ -110,12 +110,14 @@
 		{/if}
 	</div>
 	<div class="date">
-		<div>
-			{ latestOutsideTime  ? latestOutsideTime.toLocaleString() : '' } (ulko)
-		</div>
-		<div>
-			{ latestInsideTime ? latestInsideTime.toLocaleString() : '' } (sisä)
-		</div>
+		{#if latestOutsideTime != null && latestInsideTime != null }
+            <div>
+                { latestOutsideTime.toLocaleString() } (ulko)
+            </div>
+            <div>
+                { latestInsideTime.toLocaleString() } (sisä)
+            </div>
+        {/if}
 	</div>
 
 	<div class="chart">
